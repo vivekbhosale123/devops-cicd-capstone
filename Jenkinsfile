@@ -1,10 +1,11 @@
+
 pipeline {
     agent any
 
     environment {
-        DOCKERHUB_USERNAME = 'vivekbhosale123'
-        IMAGE_NAME = 'vivekbhosale123/shop-app'
-        IMAGE_TAG = "${BUILD_NUMBER}"
+        IMAGE_NAME  = 'vivekbhosale123/shop-app'
+        IMAGE_TAG   = "${BUILD_NUMBER}"
+        LOCAL_IMAGE = "shop-app:${BUILD_NUMBER}"
     }
 
     stages {
@@ -28,51 +29,75 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                echo 'SonarQube is running on port 9000.'
-                echo 'Configure SonarQube Scanner and quality gate before enabling analysis.'
+                echo 'SonarQube analysis is not configured yet.'
             }
         }
 
         stage('Build Image') {
             steps {
-                sh 'docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .'
+                sh 'docker build -t "$LOCAL_IMAGE" .'
             }
         }
 
         stage('Trivy Image Scan') {
             steps {
-                sh 'trivy image --exit-code 1 --severity HIGH,CRITICAL ${IMAGE_NAME}:${IMAGE_TAG}'
+                sh '''
+                    trivy image \
+                      --exit-code 1 \
+                      --severity HIGH,CRITICAL \
+                      "$LOCAL_IMAGE"
+                '''
             }
         }
 
         stage('Publish Image') {
             steps {
-                echo 'Configure Docker Hub credentials in Jenkins before publishing.'
-                // Add Docker Hub login and push after configuring credentials.
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-creds',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_TOKEN'
+                    )
+                ]) {
+                    sh '''
+                        set +x
+                        echo "$DOCKER_TOKEN" | docker login \
+                          --username "$DOCKER_USER" \
+                          --password-stdin
+
+                        docker tag "$LOCAL_IMAGE" "$IMAGE_NAME:$IMAGE_TAG"
+                        docker push "$IMAGE_NAME:$IMAGE_TAG"
+
+                        docker logout
+                    '''
+                }
             }
         }
 
         stage('Deploy to Development') {
             steps {
-                echo 'Configure Ansible inventory and SSH credentials before deployment.'
+                echo 'Deployment not configured yet.'
             }
         }
 
         stage('Deploy to Staging') {
             steps {
-                echo 'Configure staging inventory before deployment.'
+                echo 'Deployment not configured yet.'
             }
         }
 
         stage('Production Approval') {
             steps {
-                input message: 'Approve deployment to Production?', ok: 'Deploy'
+                timeout(time: 30, unit: 'MINUTES') {
+                    input message: 'Approve deployment to Production?',
+                          ok: 'Approve'
+                }
             }
         }
 
         stage('Deploy to Production') {
             steps {
-                echo 'Configure production inventory before deployment.'
+                echo 'Production deployment not configured yet.'
             }
         }
     }
@@ -81,12 +106,13 @@ pipeline {
         success {
             echo 'Pipeline completed successfully.'
         }
+
         failure {
             echo 'Pipeline failed. Check the stage logs.'
         }
+
         always {
             echo 'Pipeline execution finished.'
         }
     }
 }
-
