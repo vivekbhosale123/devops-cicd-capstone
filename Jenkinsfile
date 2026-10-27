@@ -39,11 +39,11 @@ pipeline {
             }
         }
 
-        stage('Trivy Image Scan') {
-    steps {
-        sh 'trivy image --exit-code 1 --severity HIGH,CRITICAL shop-app:latest'
-    }
-}
+       stage('Trivy Image Scan') {
+             steps {
+               sh 'trivy image --exit-code 1 --severity HIGH,CRITICAL shop-app:${BUILD_NUMBER}'
+           }
+        }
 
         stage('Publish Image') {
             steps {
