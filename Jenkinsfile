@@ -82,13 +82,18 @@ pipeline {
         }
 
         stage('Production Approval') {
-            steps {
-                timeout(time: 30, unit: 'MINUTES') {
-                    input message: 'Approve deployment to Production?',
-                          ok: 'Approve'
-                }
-            }
+    when {
+        branch 'main'
+    }
+    steps {
+        timeout(time: 30, unit: 'MINUTES') {
+            input(
+                message: 'Approve deployment to Production?',
+                ok: 'Approve Production'
+            )
         }
+    }
+}
 
         stage('Deploy to Production') {
             steps {

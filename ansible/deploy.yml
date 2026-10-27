@@ -1,0 +1,26 @@
+---
+- name: Deploy shop application locally
+  hosts: development
+  connection: local
+  gather_facts: false
+
+  vars:
+    image_name: "vivekbhosale123/shop-app"
+    image_tag: "{{ deploy_tag | default('1') }}"
+    container_name: "shop-app"
+    app_port: 3000
+
+  tasks:
+    - name: Pull application image
+      community.docker.docker_image:
+        name: "{{ image_name }}:{{ image_tag }}"
+        source: pull
+
+    - name: Run application container
+      community.docker.docker_container:
+        name: "{{ container_name }}"
+        image: "{{ image_name }}:{{ image_tag }}"
+        state: started
+        restart_policy: unless-stopped
+        published_ports:
+          - "3000:3000"
