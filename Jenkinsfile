@@ -41,7 +41,7 @@ pipeline {
 
        stage('Trivy Image Scan') {
              steps {
-               sh 'trivy image --exit-code 1 --severity HIGH,CRITICAL shop-app:${BUILD_NUMBER}'
+               sh 'trivy image --timeout 10m --exit-code 1 --severity HIGH,CRITICAL shop-app:${BUILD_NUMBER}'
            }
         }
 
