@@ -103,16 +103,24 @@ pipeline {
     }
 
     post {
-        success {
-            echo 'Pipeline completed successfully.'
-        }
-
-        failure {
-            echo 'Pipeline failed. Check the stage logs.'
-        }
-
-        always {
-            echo 'Pipeline execution finished.'
-        }
+    success {
+        emailext(
+            to: 'YOUR_REAL_EMAIL@example.com',
+            subject: "SUCCESS: ${JOB_NAME} #${BUILD_NUMBER}",
+            body: "Pipeline succeeded: ${BUILD_URL}"
+        )
     }
+
+    failure {
+        emailext(
+            to: 'YOUR_REAL_EMAIL@example.com',
+            subject: "FAILURE: ${JOB_NAME} #${BUILD_NUMBER}",
+            body: "Pipeline failed. Review: ${BUILD_URL}"
+        )
+    }
+
+    always {
+        echo 'Pipeline execution finished.'
+    }
+}
 }
